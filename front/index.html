@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <form action="">
+        <p>
+            <label for="">Nombre</label>
+            <input id="nombre" type="text">
+        </p>
+        <p>
+            <label for="">Precio</label>
+            <input id="precio" type="text">
+        </p>
+        <p>
+            <label for="">Stock</label>
+            <input id="stock" type="text">
+        </p>
+        <button type="button" onclick="consultar()">Consultar</button>
+        <button type="button" onclick="guardaCache()">Guardar</button>
+    </form>
+</body>
+
+</html>
+
+<script>
+    function consultar() {
+        const nombre = document.getElementById("nombre").value;
+        fetch(`http://localhost:8081/producto/consultar/${nombre}`)
+            .then(data => data.json())
+            .then(data => {
+                document.getElementById("precio").value = data.price;
+                document.getElementById("stock").value = data.stock;
+            })
+    }
+
+    const traerProducto = () => new Promise(
+        async function (resolve, reject) {
+            try {
+                const nombre = document.getElementById("nombre").value;
+                let data = await fetch(`http://localhost:8081/producto/consultar/${nombre}`)
+                data = await data.json();
+                resolve(data);
+            } catch (error) {
+                reject(error);
+            }
+        }
+    )
+
+    const guardarDD = (data) => new Promise(
+        function (resolve, reject) {
+            try {
+                localStorage.setItem("mis_productos", JSON.stringify(data))
+                resolve("Guardado")
+            } catch (error) {
+                reject(error);
+            }
+        }
+    )
+    const notificar = () => new Promise(
+        function (resolve, reject) {
+            try {
+                alert("Datos guardados")
+                resolve("ok")
+            } catch (error) {
+                reject(error);
+            }
+        }
+    )
+    function guardaCache() {
+        traerProducto()
+            .then(data => guardarDD(data))
+            .then(res => notificar())
+            .catch(error => console.log(error));
+    }
+</script>
