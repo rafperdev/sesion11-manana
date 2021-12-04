@@ -23,21 +23,87 @@
             <input id="stock" type="text">
         </p>
         <button type="button" onclick="consultar()">Consultar</button>
-        <button type="button" onclick="guardaCache()">Guardar</button>
+        <button type="button" onclick="guardar()">Guardar</button>
+        <button type="button" onclick="editar()">Editar</button>
+        <button type="button" onclick="eliminar()">Eliminar</button>
     </form>
 </body>
 
 </html>
 
 <script>
+    const hostBase = "http://localhost:8081";
     function consultar() {
         const nombre = document.getElementById("nombre").value;
-        fetch(`http://localhost:8081/producto/consultar/${nombre}`)
+        fetch(`${hostBase}/producto/consultar/${nombre}`)
             .then(data => data.json())
             .then(data => {
-                document.getElementById("precio").value = data.price;
-                document.getElementById("stock").value = data.stock;
+                if (data.estado == "ok") {
+                    document.getElementById("precio").value = data.prod.price;
+                    document.getElementById("stock").value = data.prod.stock;
+                } else {
+                    limpiar();
+                    alert(data.msg);
+                }
             })
+    }
+
+    function guardar() {
+        //Captura los datos 
+        const nombre = document.getElementById("nombre").value;
+        const precio = document.getElementById("precio").value;
+        const stock = document.getElementById("stock").value;
+        //Hace petición AJAX al servidor (consumir API)
+        fetch(`${hostBase}/producto/guardar`, {
+            headers: { "content-type": "application/json" },
+            method: "POST",
+            body: JSON.stringify({ nombre, precio, stock })
+        }).then(data => data.json())
+            .then(data => {
+                limpiar();
+                alert(data.msg)
+            })
+    }
+
+    function editar() {
+        // Capturar los datos
+        const nombre = document.getElementById("nombre").value;
+        const precio = document.getElementById("precio").value;
+        const stock = document.getElementById("stock").value;
+        // Consumir API para editar
+        fetch(`${hostBase}/producto/editar`, {
+            headers: { "content-type": "application/json" },
+            method: "POST",
+            body: JSON.stringify({ nombre, precio, stock })
+        }).then(data => data.json())
+            .then(data => {
+                limpiar();
+                alert(data.msg)
+            }) // Repuesta del servidor
+    }
+
+    function eliminar() {
+        const resp = confirm("Realmente desea ELIMINAR el producto?");
+        if (resp) {
+            // Capturar los datos
+            const nombre = document.getElementById("nombre").value;
+            // Consumir API para eliminar
+            fetch(`${hostBase}/producto/eliminar`, {
+                headers: { "content-type": "application/json" },
+                method: "POST",
+                body: JSON.stringify({ nombre })
+            }).then(data => {
+                limpiar();
+                data.json()
+            })
+                .then(data => alert(data.msg)) // Repuesta del servidor
+        }
+    }
+
+    function limpiar() {
+        document.getElementById("nombre").value = "";
+        document.getElementById("precio").value = "";
+        document.getElementById("stock").value = "";
     }
 
     const traerProducto = () => new Promise(
@@ -52,7 +118,6 @@
             }
         }
     )
-
     const guardarDD = (data) => new Promise(
         function (resolve, reject) {
             try {
