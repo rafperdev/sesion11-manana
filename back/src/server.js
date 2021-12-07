@@ -1,26 +1,33 @@
 const express = require("express");
 const cors = require("cors");
-const { productos } = require("./datos.js");
-
+const mongoose = require("mongoose");
+const ProductosModel = require("./modelos/productosModel");
 const app = express();
 app.use(cors());//Middleware cors
 app.use(express.json()) // Middleware convierte a json
+
+mongoose.connect("mongodb://127.0.0.1:27017/mall")
+    .then(res => console.log("Conectado a BD"))
+    .catch(error => console.log(error));
+
 //API HOME: Rutas, endpoint
 app.get("/", (req, res) => {
     res.send("<h1>Hola al mundo dev</h1>");
 });
 
 //API CONSULTAR
-app.get("/producto/consultar/:name", (req, res) => {
-    let estado = "error";
-    let msg = "NO Encontrado";
-    const nombre = req.params.name;
-    const prod = productos.find(p => p.title.toLowerCase() == nombre.toLowerCase());    
-    if (prod != null){
-        estado = "ok";
-        msg = "Encontrado";
-    }
-    res.send({ estado, msg, prod });
+app.post("/producto/consultar", (req, res) => {
+    const { nombre } = req.body; //{nombre:"pan",precio:20}
+    ProductosModel.findOne({ "nombre": nombre }, function (error, p) {
+        if (error) {
+            return res.send({ estado: "error", msg: "ERROR: Al buscar producto" })
+        } else {
+            if (p != null) {
+                return res.send({ estado: "ok", msg: "Producto encontrado", data: p })
+            }
+            return res.send({ estado: "error", msg: "Producto NO encontrado" })
+        }
+    })
 });
 
 /**
@@ -31,15 +38,14 @@ app.get("/producto/consultar/:name", (req, res) => {
  * Respuesta : {estado: "ok", msg:"Producto Guardado :)"}
  */
 app.post("/producto/guardar", function (req, res) {
-    // Capturar los datos que vienen del cliente
-    const { nombre, precio, stock } = req.body;
-    // Crear un JSON de producto con los datos
-    const prod = { title: nombre, price: precio, stock };
-    // Insertar el nuevo producto en la 'BD' Productos
-    productos.push(prod);
-    console.log(productos);
-    // Enviar Respuesta al cliente
-    res.send({ estado: "ok", msg: "Producto Guardado :)" })
+    const data = req.body;
+    const prod = new ProductosModel(data);
+    prod.save(function (error) {
+        if (error) {
+            return res.send({ estado: "error", msg: "ERROR: Producto NO Guardado" });
+        }
+        res.send({ estado: "ok", msg: "Producto Guardado :)" });
+    })
 })
 
 /**

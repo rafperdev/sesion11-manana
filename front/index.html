@@ -35,15 +35,19 @@
     const hostBase = "http://localhost:8081";
     function consultar() {
         const nombre = document.getElementById("nombre").value;
-        fetch(`${hostBase}/producto/consultar/${nombre}`)
-            .then(data => data.json())
-            .then(data => {
-                if (data.estado == "ok") {
-                    document.getElementById("precio").value = data.prod.price;
-                    document.getElementById("stock").value = data.prod.stock;
+        fetch(`${hostBase}/producto/consultar`, {
+            headers: { "content-type": "application/json" },
+            method: "POST",
+            body: JSON.stringify({ nombre })
+        })
+            .then(res => res.json())
+            .then(res => {
+                if (res.estado == "ok") {
+                    document.getElementById("precio").value = res.data.precio;
+                    document.getElementById("stock").value = res.data.stock;
                 } else {
                     limpiar();
-                    alert(data.msg);
+                    alert(res.msg);
                 }
             })
     }
