@@ -28,7 +28,7 @@ usuarioRutas.post("/login", async function (req, res) {
                 },
                 process.env.JWT_SECRET_KEY
             )
-            return res.status(200).send({ estado: "ok", msg: "Logueado :)", token });
+            return res.status(200).send({ estado: "ok", msg: "Logueado :)", url: "/home", token });
         }
         //Si no coinciden los password, envia error
         return res.status(401).send({ estado: "error", msg: "Credenciales NO válidas" });
